@@ -10,11 +10,11 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
     except getopt.GetoptError:
-        print 'manipulator.py -i <inputfile> -o <outputfile>'
+        print ('manipulator.py -i <inputfile> -o <outputfile>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'manipulator.py -i <inputfile> -o <outputfile>'
+            print ('manipulator.py -i <inputfile> -o <outputfile>')
             sys.exit()
         elif opt in ("-i", "--ifile"):
             inputfile = arg
@@ -40,7 +40,6 @@ def main(argv):
         currentSheet = theFile[sheet]
         
         for row in range(2, currentSheet.max_row + 1):
-            
             villageName = currentSheet.cell(row = row, column = 7).value
             if villageName not in seen :
                 seen.add(villageName)
@@ -59,10 +58,10 @@ def main(argv):
             Influencers.append(Influencer(currentSheet.cell(row = row, column = 20).value, currentSheet.cell(row = row, column = 21).value, currentSheet.cell(row = row, column = 22).value, currentSheet.cell(row = row, column = 23).value))
             Influencers.append(Influencer(currentSheet.cell(row = row, column = 24).value, currentSheet.cell(row = row, column = 25).value, currentSheet.cell(row = row, column = 26).value, currentSheet.cell(row = row, column = 27).value))
 
-            Influencers = [x for x in Influencers if not x.name is None]
-
+            Influencers = [x for x in Influencers if x.name]
+            
             result[villageName] += Influencers
-
+            
             # Hotspot detail aggregation :
             existing_details = hotspot.get(villageName)
             if existing_details is None :
@@ -77,10 +76,17 @@ def main(argv):
             new_people = existing_details.people
             new_village = existing_details.village
             new_village_people = existing_details.village_people
+
             #Only add sc and people if sc is not null. Similarly only add village and village_people if village is not null
             if (sc != '') :
                 new_sc = new_sc + sc.strip() + ","
-                new_people = new_people + str(people).strip() + ","
+                try:
+                    new_people = new_people + str(people).strip() + ","
+                except:
+                    print("Exception caught")
+                    print(villageName)
+                    print(people)
+                    # new_people = new_people + unicode(people, 'utf-8').strip() + ","
             
             if (village != '') :
                 new_village = new_village + village.strip() + ","
@@ -88,26 +94,22 @@ def main(argv):
         
             hotspot[villageName] = HotspotDetails(new_sc, new_people, new_village, new_village_people)
             
+    # Now lets start writing the new output excel sheet data
+    header = ["UID", "District", "AC", "Block", "Village", "Hotspot SC", "Hotspot_SC_People", "Hotspot_Village", "Hotspot_Village_People", "Influencer Name", "Influencer Contact", "Influencer Occupation", "Influencer Party"]
+    excel_sheet.append(header)
 
     for village in seen :
         rowData = []
         details = villageDetails[village]
         influencers = result[village]
         hotspotData = hotspot[village]
+
+        #Start with village data
         rowData.append(details.uid)
         rowData.append(details.district)
         rowData.append(details.ac)
         rowData.append(details.block)
         rowData.append(details.village)
-        for influencer in influencers :
-            rowData.append(influencer.name)
-            rowData.append(influencer.contact)
-            rowData.append(influencer.occupation)
-            rowData.append(influencer.party)
-        
-        while(len(rowData) < 45 ) :
-            rowData.append('')
-
         new_sc = hotspotData.sc
         if (new_sc != '') :
             new_sc = new_sc[:-1]
@@ -124,10 +126,18 @@ def main(argv):
         if (new_village_people != '') :
             new_village_people = new_village_people[:-1]
 
+        # Add hotspots now
         rowData.append(new_sc)
         rowData.append(new_people)
         rowData.append(new_village)
         rowData.append(new_village_people)
+
+        # Add influencers now
+        for influencer in influencers :
+            rowData.append(influencer.name)
+            rowData.append(influencer.contact)
+            rowData.append(influencer.occupation)
+            rowData.append(influencer.party)
     
         excel_sheet.append(rowData)
 
