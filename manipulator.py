@@ -20,16 +20,9 @@ def main(argv):
             inputfile = arg
         elif opt in ("-o", "--ofile"):
             outputfile = arg
-            
+
     theFile = load_workbook(inputfile)
     allSheetNames = theFile.sheetnames
-
-    excel_file = Workbook()
-    excel_sheet = excel_file.create_sheet(title='Result', index=0)
-
-    # theFile = load_workbook('/Users/trisha/code/tush/sheet.xlsx')
-    # theFile = load_workbook(inputfile)
-    # allSheetNames = theFile.sheetnames
 
     excel_file = Workbook()
     excel_sheet = excel_file.create_sheet(title='Result', index=0)
